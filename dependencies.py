@@ -2,7 +2,8 @@ from typing import Annotated
 from fastapi import Query, Depends
 from pydantic import BaseModel
 
-# Query в Query - баг FastAPI: https://github.com/fastapi/fastapi/issues/4700
+# Query в Query - баг FastAPI, в OpenAPI не отображается description при использовании Depends.
+# Тема: https://github.com/fastapi/fastapi/issues/4700
 # Решение: https://github.com/fastapi/fastapi/issues/4700#issuecomment-1149404526
 # Если используется default, то троеточие не нужно.
 # Fix по этой теме до сих пор открыт: https://github.com/fastapi/fastapi/pull/4573
