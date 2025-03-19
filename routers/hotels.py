@@ -1,5 +1,6 @@
-from fastapi import Query, Path, Body, APIRouter
+from fastapi import Query, Path, Body, APIRouter, Depends
 from schemas.hotels import HotelPOST, HotelPUT, HotelPATCH
+from dependencies import PaginationDep
 from assets.openapi_examples.hotels import (
     POST_OPENAPI_EXAMPLE,
     PUT_OPENAPI_EXAMPLE,
@@ -21,10 +22,9 @@ hotels = [
 
 @router.get("/hotels", summary="Получить список отелей")
 def get_hotels(
+    pagination: PaginationDep,
     title: str = Query(default=None, description="Название отеля"),
     stars: int = Query(default=None, description="Количество звёзд"),
-    page: int = Query(default=1, description="Страница пагинации"),
-    per_page: int = Query(default=3, description="Объектов на странице"),
 ):
     result = []
     for hotel in hotels:
@@ -34,8 +34,8 @@ def get_hotels(
             continue
         result.append(hotel)
 
-    start = (page - 1) * per_page
-    end = start + per_page
+    start = (pagination.page - 1) * pagination.per_page
+    end = start + pagination.per_page
 
     return result[start:end]
 
