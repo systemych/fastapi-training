@@ -1,1 +1,3 @@
-# fastapi-training
+# README
+
+Проект содержит результат выполнения домашних заданий по курсу https://artemshumeiko.ru/
