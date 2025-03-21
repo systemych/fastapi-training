@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import ForeignKey
 
 from src.database import Base
 
-class HotelsOrm(Base):
+class RoomsOrm(Base):
     __tablename__ = "rooms"
 
     id: Mapped[int] = mapped_column(primary_key=True)
