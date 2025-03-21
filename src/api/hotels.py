@@ -1,7 +1,8 @@
 from fastapi import Query, Path, Body, APIRouter, Depends
-from schemas.hotels import HotelPOST, HotelPUT, HotelPATCH
-from dependencies import PaginationDep
-from assets.openapi_examples.hotels import (
+from src.api.dependencies import PaginationDep
+
+from src.schemas.hotels import HotelPOST, HotelPUT, HotelPATCH
+from src.assets.openapi_examples.hotels import (
     POST_OPENAPI_EXAMPLE,
     PUT_OPENAPI_EXAMPLE,
     PATCH_OPENAPI_EXAMPLE,
