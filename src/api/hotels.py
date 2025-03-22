@@ -1,5 +1,5 @@
 from fastapi import Query, Path, Body, APIRouter, Depends
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update, delete
 
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
@@ -18,14 +18,16 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 @router.get("/hotels", summary="Получить список отелей")
 async def get_hotels(
     pagination: PaginationDep,
-    title: str = Query(default=None, description="Название отеля"),
+    title: str = Query(default=None, description="Название"),
     location: int = Query(default=None, description="Адрес"),
 ):
     async with async_session_maker() as session:
         query = select(HotelsOrm)
 
         if title:
-            query = query.filter_by(title=title)
+            query = query.filter(HotelsOrm.title.ilike(f"%{title}%"))
+        if location:
+            query = query.filter(HotelsOrm.location.ilike(f"%{location}%"))
 
         query = query.limit(pagination.per_page).offset(
             pagination.per_page * (pagination.page - 1)
@@ -35,15 +37,15 @@ async def get_hotels(
         hotels = result.scalars().all()
         return hotels
 
-    # start = (pagination.page - 1) * pagination.per_page
-    # end = start + pagination.per_page
-
 
 @router.get("/hotels/{id}", summary="Получить информацию по отелю")
-def get_hotel(id: int = Path(description="ИД отеля")):
-    for hotel in hotels:
-        if hotel["id"] == id:
-            return hotel
+async def get_hotel(id: int = Path(description="ИД отеля")):
+    async with async_session_maker() as session:
+        query = select(HotelsOrm).filter_by(id=id)
+
+        result = await session.execute(query)
+        hotel = result.scalars().all()
+        return hotel
 
 
 @router.post("/hotels", summary="Создать отель")
@@ -58,31 +60,48 @@ async def create_hotel(
 
 
 @router.put("/hotels/{id}", summary="Обновить все поля отеля")
-def update_hotel(
+async def update_hotel(
     id: int = Path(description="ИД отеля"),
     hotel_data: HotelPUT = Body(openapi_examples=PUT_OPENAPI_EXAMPLE),
 ):
-    hotel = [hotel for hotel in hotels if hotel["id"] == id][0]
-    hotel["title"] = hotel_data.title
-    hotel["stars"] = hotel_data.stars
-
-    return hotel
+    async with async_session_maker() as session:
+        update_hotel_stmt = (
+            update(HotelsOrm).filter_by(id=id).values(**hotel_data.model_dump())
+        )
+        await session.execute(update_hotel_stmt)
+        await session.commit()
+    return hotel_data.model_dump()
 
 
 @router.patch("/hotels/{id}", summary="Обновить выбранные поля отеля")
-def edit_hotel(
+async def edit_hotel(
     id: int = Path(description="ИД отеля"),
     hotel_data: HotelPATCH = Body(openapi_examples=PATCH_OPENAPI_EXAMPLE),
 ):
-    hotel = [hotel for hotel in hotels if hotel["id"] == id][0]
-    hotel["title"] = hotel_data.title if hotel_data.title else hotel["title"]
-    hotel["stars"] = hotel_data.stars if hotel_data.stars else hotel["stars"]
+    async with async_session_maker() as session:
+        edit_hotel_stmt = update(HotelsOrm).filter_by(id=id)
 
-    return hotel
+        if hotel_data.title:
+            edit_hotel_stmt = edit_hotel_stmt.values(title=hotel_data.title)
+        if hotel_data.location:
+            edit_hotel_stmt = edit_hotel_stmt.values(title=hotel_data.location)
+
+        await session.execute(edit_hotel_stmt)
+        await session.commit()
+
+        query = select(HotelsOrm).filter_by(id=id)
+
+        result = await session.execute(query)
+        hotel = result.scalars().all()
+        return hotel
 
 
 @router.delete("/hotels/{id}", summary="Удалить отель")
-def delete_hotels(id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != id]
+async def delete_hotels(id: int):
+    async with async_session_maker() as session:
+        delete_hotel_stmt = (
+            delete(HotelsOrm).filter_by(id=id)
+        )
+        await session.execute(delete_hotel_stmt)
+        await session.commit()
     return {"status": "OK"}
