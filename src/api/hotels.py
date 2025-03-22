@@ -1,7 +1,11 @@
 from fastapi import Query, Path, Body, APIRouter, Depends
+from sqlalchemy import insert, select, update, delete
+
 from src.api.dependencies import PaginationDep
+from src.database import async_session_maker
 
 from src.schemas.hotels import HotelPOST, HotelPUT, HotelPATCH
+from src.models.hotels import HotelsOrm
 from src.assets.openapi_examples.hotels import (
     POST_OPENAPI_EXAMPLE,
     PUT_OPENAPI_EXAMPLE,
@@ -10,82 +14,94 @@ from src.assets.openapi_examples.hotels import (
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
-hotels = [
-    {"id": 1, "title": "Сочи", "stars": 4},
-    {"id": 2, "title": "Дубаи", "stars": 4},
-    {"id": 3, "title": "Мальдивы", "stars": 5},
-    {"id": 4, "title": "Геленджик", "stars": 3},
-    {"id": 5, "title": "Москва", "stars": 3},
-    {"id": 6, "title": "Казань", "stars": 3},
-    {"id": 7, "title": "Санкт-Петербург", "stars": 4},
-]
-
 
 @router.get("/hotels", summary="Получить список отелей")
-def get_hotels(
+async def get_hotels(
     pagination: PaginationDep,
-    title: str = Query(default=None, description="Название отеля"),
-    stars: int = Query(default=None, description="Количество звёзд"),
+    title: str = Query(default=None, description="Название"),
+    location: int = Query(default=None, description="Адрес"),
 ):
-    result = []
-    for hotel in hotels:
-        if title and hotel["title"] != title:
-            continue
-        if stars and hotel["stars"] != stars:
-            continue
-        result.append(hotel)
+    async with async_session_maker() as session:
+        query = select(HotelsOrm)
 
-    start = (pagination.page - 1) * pagination.per_page
-    end = start + pagination.per_page
+        if title:
+            query = query.filter(HotelsOrm.title.ilike(f"%{title}%"))
+        if location:
+            query = query.filter(HotelsOrm.location.ilike(f"%{location}%"))
 
-    return result[start:end]
+        query = query.limit(pagination.per_page).offset(
+            pagination.per_page * (pagination.page - 1)
+        )
+
+        result = await session.execute(query)
+        hotels = result.scalars().all()
+        return hotels
 
 
 @router.get("/hotels/{id}", summary="Получить информацию по отелю")
-def get_hotel(id: int = Path(description="ИД отеля")):
-    for hotel in hotels:
-        if hotel["id"] == id:
-            return hotel
+async def get_hotel(id: int = Path(description="ИД отеля")):
+    async with async_session_maker() as session:
+        query = select(HotelsOrm).filter_by(id=id)
+
+        result = await session.execute(query)
+        hotel = result.scalars().all()
+        return hotel
 
 
 @router.post("/hotels", summary="Создать отель")
-def create_hotel(hotel_data: HotelPOST = Body(openapi_examples=POST_OPENAPI_EXAMPLE)):
-    hotel = {
-        "id": hotels[-1]["id"] + 1,
-        "title": hotel_data.title,
-        "stars": hotel_data.stars,
-    }
-    hotels.append(hotel)
-
-    return hotel
+async def create_hotel(
+    hotel_data: HotelPOST = Body(openapi_examples=POST_OPENAPI_EXAMPLE),
+):
+    async with async_session_maker() as session:
+        add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
+        await session.execute(add_hotel_stmt)
+        await session.commit()
+    return hotel_data.model_dump()
 
 
 @router.put("/hotels/{id}", summary="Обновить все поля отеля")
-def update_hotel(
+async def update_hotel(
     id: int = Path(description="ИД отеля"),
     hotel_data: HotelPUT = Body(openapi_examples=PUT_OPENAPI_EXAMPLE),
 ):
-    hotel = [hotel for hotel in hotels if hotel["id"] == id][0]
-    hotel["title"] = hotel_data.title
-    hotel["stars"] = hotel_data.stars
-
-    return hotel
+    async with async_session_maker() as session:
+        update_hotel_stmt = (
+            update(HotelsOrm).filter_by(id=id).values(**hotel_data.model_dump())
+        )
+        await session.execute(update_hotel_stmt)
+        await session.commit()
+    return hotel_data.model_dump()
 
 
 @router.patch("/hotels/{id}", summary="Обновить выбранные поля отеля")
-def edit_hotel(
+async def edit_hotel(
     id: int = Path(description="ИД отеля"),
     hotel_data: HotelPATCH = Body(openapi_examples=PATCH_OPENAPI_EXAMPLE),
 ):
-    hotel = [hotel for hotel in hotels if hotel["id"] == id][0]
-    hotel["title"] = hotel_data.title if hotel_data.title else hotel["title"]
-    hotel["stars"] = hotel_data.stars if hotel_data.stars else hotel["stars"]
+    async with async_session_maker() as session:
+        edit_hotel_stmt = update(HotelsOrm).filter_by(id=id)
 
-    return hotel
+        if hotel_data.title:
+            edit_hotel_stmt = edit_hotel_stmt.values(title=hotel_data.title)
+        if hotel_data.location:
+            edit_hotel_stmt = edit_hotel_stmt.values(title=hotel_data.location)
+
+        await session.execute(edit_hotel_stmt)
+        await session.commit()
+
+        query = select(HotelsOrm).filter_by(id=id)
+
+        result = await session.execute(query)
+        hotel = result.scalars().all()
+        return hotel
 
 
 @router.delete("/hotels/{id}", summary="Удалить отель")
-def delete_hotels(id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != id]
+async def delete_hotels(id: int):
+    async with async_session_maker() as session:
+        delete_hotel_stmt = (
+            delete(HotelsOrm).filter_by(id=id)
+        )
+        await session.execute(delete_hotel_stmt)
+        await session.commit()
     return {"status": "OK"}
