@@ -43,11 +43,9 @@ async def create_hotel(
     hotel_data: HotelPOST = Body(openapi_examples=POST_OPENAPI_EXAMPLE),
 ):
     async with async_session_maker() as session:
-        result = await HotelsRepository(session).add(**hotel_data.model_dump())
-        await session.flush()
-        id = result.scalars().one_or_none()
+        result = await HotelsRepository(session).add(hotel_data)
         await session.commit()
-        return await HotelsRepository(session).get_one_or_none(id=id)
+        return result
 
 
 @router.put("/hotels/{id}", summary="Обновить все поля отеля")
