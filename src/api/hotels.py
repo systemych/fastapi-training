@@ -1,5 +1,5 @@
-from fastapi import Query, Path, Body, APIRouter, Depends
-from sqlalchemy import insert, select, update, delete
+from fastapi import Query, Path, Body, APIRouter, HTTPException, status
+from sqlalchemy import select, update
 
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
@@ -54,12 +54,16 @@ async def update_hotel(
     hotel_data: HotelPUT = Body(openapi_examples=PUT_OPENAPI_EXAMPLE),
 ):
     async with async_session_maker() as session:
-        update_hotel_stmt = (
-            update(HotelsOrm).filter_by(id=id).values(**hotel_data.model_dump())
-        )
-        await session.execute(update_hotel_stmt)
+        selected_hotel = await HotelsRepository(session).get_one_or_none(id=id)
+
+        if not selected_hotel:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+            )
+
+        result = await HotelsRepository(session).update(hotel_data, id=id)
         await session.commit()
-    return hotel_data.model_dump()
+        return result
 
 
 @router.patch("/hotels/{id}", summary="Обновить выбранные поля отеля")
@@ -88,7 +92,13 @@ async def edit_hotel(
 @router.delete("/hotels/{id}", summary="Удалить отель")
 async def delete_hotels(id: int):
     async with async_session_maker() as session:
-        delete_hotel_stmt = delete(HotelsOrm).filter_by(id=id)
-        await session.execute(delete_hotel_stmt)
+        selected_hotel = await HotelsRepository(session).get_one_or_none(id=id)
+
+        if not selected_hotel:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+            )
+
+        await HotelsRepository(session).delete(id=id)
         await session.commit()
     return {"status": "OK"}
