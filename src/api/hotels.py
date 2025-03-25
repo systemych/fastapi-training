@@ -78,7 +78,7 @@ async def edit_hotel(
             )
 
         result = await HotelsRepository(session).edit(
-            hotel_data, exlude_unset=True, id=id
+            hotel_data, exсlude_unset=True, id=id
         )
         await session.commit()
         return result

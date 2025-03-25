@@ -23,21 +23,21 @@ class BaseRepository:
         result = await self.session.execute(add_stmt)
         return result.scalars().one()
 
-    async def update(self, data: BaseModel, exlude_unset: bool = False, **filter_by):
+    async def update(self, data: BaseModel, exсlude_unset: bool = False, **filter_by):
         update_hotel_stmt = (
             update(self.model)
             .filter_by(**filter_by)
-            .values(**data.model_dump(exclude_unset=exlude_unset))
+            .values(**data.model_dump(exclude_unset=exсlude_unset))
             .returning(self.model)
         )
         result = await self.session.execute(update_hotel_stmt)
         return result.scalars().one()
 
-    async def edit(self, data: BaseModel, exlude_unset: bool = False, **filter_by):
+    async def edit(self, data: BaseModel, exсlude_unset: bool = False, **filter_by):
         edit_hotel_stmt = (
             update(self.model)
             .filter_by(**filter_by)
-            .values(**data.model_dump(exclude_unset=exlude_unset))
+            .values(**data.model_dump(exclude_unset=exсlude_unset))
             .returning(self.model)
         )
 
