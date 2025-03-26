@@ -1,5 +1,10 @@
 from pydantic import BaseModel, Field
 
+class HotelSchema(BaseModel):
+    id: int
+    title: str
+    location: str
+
 class HotelPOST(BaseModel):
     title: str = Field(description="Название")
     location: str = Field(description="Адрес")

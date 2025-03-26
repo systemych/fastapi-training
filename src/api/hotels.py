@@ -22,19 +22,26 @@ async def get_hotels(
 ):
 
     async with async_session_maker() as session:
-        return await HotelsRepository(session).get_all(
+        result = await HotelsRepository(session).get_all(
             title=title,
             location=location,
             limit=pagination.per_page,
             offset=pagination.per_page * (pagination.page - 1),
         )
+        print(result)
+        return result
 
 
 @router.get("/hotels/{id}", summary="Получить информацию по отелю")
 async def get_hotel(id: int = Path(description="ИД отеля")):
     async with async_session_maker() as session:
-        return await HotelsRepository(session).get_one_or_none(id=id)
+        requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)
 
+        if requested_hotel is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+            )
+        return requested_hotel
 
 @router.post("/hotels", summary="Создать отель")
 async def create_hotel(
@@ -52,9 +59,9 @@ async def update_hotel(
     hotel_data: HotelPUT = Body(openapi_examples=PUT_OPENAPI_EXAMPLE),
 ):
     async with async_session_maker() as session:
-        selected_hotel = await HotelsRepository(session).get_one_or_none(id=id)
+        requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)
 
-        if not selected_hotel:
+        if requested_hotel is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
             )
@@ -70,9 +77,9 @@ async def edit_hotel(
     hotel_data: HotelPATCH = Body(openapi_examples=PATCH_OPENAPI_EXAMPLE),
 ):
     async with async_session_maker() as session:
-        selected_hotel = await HotelsRepository(session).get_one_or_none(id=id)
+        requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)
 
-        if not selected_hotel:
+        if requested_hotel is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
             )
@@ -87,13 +94,13 @@ async def edit_hotel(
 @router.delete("/hotels/{id}", summary="Удалить отель")
 async def delete_hotels(id: int):
     async with async_session_maker() as session:
-        selected_hotel = await HotelsRepository(session).get_one_or_none(id=id)
+        requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)
 
-        if not selected_hotel:
+        if requested_hotel is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
             )
 
         await HotelsRepository(session).delete(id=id)
         await session.commit()
-    return {"status": "OK"}
+    return "OK"
