@@ -22,7 +22,6 @@ class BaseRepository:
         return self.schema.model_validate(model, from_attributes=True)
 
     async def add(self, data: BaseModel):
-        print(self.schema)
         add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         result = await self.session.execute(add_stmt)
         model = result.scalars().one()
