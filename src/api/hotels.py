@@ -3,7 +3,7 @@ from fastapi import Query, Path, Body, APIRouter, HTTPException, status
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
 
-from src.schemas.hotels import HotelPOST, HotelPUT, HotelPATCH
+from src.schemas.hotels import HotelAdd, HotelUpdate, HotelEdit
 from src.repositories.hotels import HotelsRepository
 from src.assets.openapi_examples.hotels import (
     POST_OPENAPI_EXAMPLE,
@@ -44,7 +44,7 @@ async def get_hotel(id: int = Path(description="ИД отеля")):
 
 @router.post("/hotels", summary="Создать отель")
 async def create_hotel(
-    hotel_data: HotelPOST = Body(openapi_examples=POST_OPENAPI_EXAMPLE),
+    hotel_data: HotelAdd = Body(openapi_examples=POST_OPENAPI_EXAMPLE),
 ):
     async with async_session_maker() as session:
         result = await HotelsRepository(session).add(hotel_data)
@@ -55,7 +55,7 @@ async def create_hotel(
 @router.put("/hotels/{id}", summary="Обновить все поля отеля")
 async def update_hotel(
     id: int = Path(description="ИД отеля"),
-    hotel_data: HotelPUT = Body(openapi_examples=PUT_OPENAPI_EXAMPLE),
+    hotel_data: HotelUpdate = Body(openapi_examples=PUT_OPENAPI_EXAMPLE),
 ):
     async with async_session_maker() as session:
         requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)
@@ -73,7 +73,7 @@ async def update_hotel(
 @router.patch("/hotels/{id}", summary="Обновить выбранные поля отеля")
 async def edit_hotel(
     id: int = Path(description="ИД отеля"),
-    hotel_data: HotelPATCH = Body(openapi_examples=PATCH_OPENAPI_EXAMPLE),
+    hotel_data: HotelEdit = Body(openapi_examples=PATCH_OPENAPI_EXAMPLE),
 ):
     async with async_session_maker() as session:
         requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)

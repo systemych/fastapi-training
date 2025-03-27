@@ -5,14 +5,14 @@ class HotelSchema(BaseModel):
     title: str
     location: str
 
-class HotelPOST(BaseModel):
+class HotelAdd(BaseModel):
     title: str = Field(description="Название")
     location: str = Field(description="Адрес")
 
-class HotelPUT(BaseModel):
+class HotelUpdate(BaseModel):
     title: str = Field(description="Название")
     location: str = Field(description="Адрес")
 
-class HotelPATCH(BaseModel):
+class HotelEdit(BaseModel):
     title: str | None = Field(default=None, description="Название")
     location: str | None = Field(default=None, description="Адрес")
