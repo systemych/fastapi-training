@@ -1,16 +1,19 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, status
 from passlib.context import CryptContext
 
 from src.database import async_session_maker
 from src.schemas.users import UserRegister, UserAdd
 from src.repositories.users import UsersRepository
+from src.assets.openapi_examples.users import (
+    CREATE_USER_EXAMPLE
+)
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация и авторизация"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-@router.post("/register")
+@router.post("/register", summary="Создать пользователя")
 async def register_user(
-    data: UserRegister
+    data: UserRegister = Body(openapi_examples=CREATE_USER_EXAMPLE),
 ):
     hashed_password = pwd_context.hash(data.password)
     new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
