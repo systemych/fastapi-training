@@ -1,13 +1,18 @@
 from pydantic import BaseModel, Field
 
-class HotelPOST(BaseModel):
+class HotelSchema(BaseModel):
+    id: int
+    title: str
+    location: str
+
+class HotelAdd(BaseModel):
     title: str = Field(description="Название")
     location: str = Field(description="Адрес")
 
-class HotelPUT(BaseModel):
+class HotelUpdate(BaseModel):
     title: str = Field(description="Название")
     location: str = Field(description="Адрес")
 
-class HotelPATCH(BaseModel):
+class HotelEdit(BaseModel):
     title: str | None = Field(default=None, description="Название")
     location: str | None = Field(default=None, description="Адрес")
