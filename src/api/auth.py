@@ -55,7 +55,5 @@ async def register_user(
 
 @router.get("/only_auth")
 async def only_auth(request: Request):
-    access_token = (
-        request.cookies["access_token"] if "access_token" in request.cookies else None
-    )
+    access_token = request.cookies.get("access_token", None)
     return access_token
