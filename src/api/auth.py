@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Body, HTTPException, status, Response, Request
+from fastapi import APIRouter, Body, HTTPException, status, Response
 
 from src.database import async_session_maker
 from src.schemas.users import UserRegister, UserAdd
 from src.repositories.users import UsersRepository
 from src.services.auth import AuthService
+from src.api.dependencies import UserIdDep
 from src.assets.openapi_examples.users import CREATE_USER_EXAMPLE, LOGIN_USER_EXAMPLE
 
 import json
@@ -53,7 +54,19 @@ async def register_user(
         return {"access_token": access_token}
 
 
-@router.get("/only_auth")
-async def only_auth(request: Request):
-    access_token = request.cookies.get("access_token", None)
-    return access_token
+@router.post("/logout", summary="Убрать аутентификацию пользователя")
+async def logout_user(
+    response: Response,
+):
+    try:
+        response.delete_cookie("access_token")
+    except:
+        pass
+    return "OK"
+
+
+@router.get("/me", summary="Получить информацию по пользователю")
+async def get_me(user_id: UserIdDep):
+    async with async_session_maker() as session:
+        user = await UsersRepository(session).get_one_or_none(id=user_id)
+        return user
