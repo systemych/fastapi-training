@@ -54,7 +54,18 @@ async def register_user(
         return {"access_token": access_token}
 
 
-@router.get("/me", summary="Получить информацию по текущему пользователю")
+@router.post("/logout", summary="Убрать аутентификацию пользователя")
+async def logout_user(
+    response: Response,
+):
+    try:
+        response.delete_cookie("access_token")
+    except:
+        pass
+    return "OK"
+
+
+@router.get("/me", summary="Получить информацию по пользователю")
 async def get_me(user_id: UserIdDep):
     async with async_session_maker() as session:
         user = await UsersRepository(session).get_one_or_none(id=user_id)
