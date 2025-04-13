@@ -14,7 +14,7 @@ from src.assets.openapi_examples.hotels import (
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 
-@router.get("/hotels", summary="Получить список отелей")
+@router.get("/", summary="Получить список отелей")
 async def get_hotels(
     pagination: PaginationDep,
     title: str = Query(default=None, description="Название"),
@@ -31,7 +31,7 @@ async def get_hotels(
         return result
 
 
-@router.get("/hotels/{id}", summary="Получить информацию по отелю")
+@router.get("/{id}", summary="Получить информацию по отелю")
 async def get_hotel(id: int = Path(description="ИД отеля")):
     async with async_session_maker() as session:
         requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)
@@ -42,7 +42,7 @@ async def get_hotel(id: int = Path(description="ИД отеля")):
             )
         return requested_hotel
 
-@router.post("/hotels", summary="Создать отель")
+@router.post("/", summary="Создать отель")
 async def create_hotel(
     hotel_data: HotelAdd = Body(openapi_examples=CREATE_HOTEL_EXAMPLE),
 ):
@@ -52,7 +52,7 @@ async def create_hotel(
         return result
 
 
-@router.put("/hotels/{id}", summary="Обновить все поля отеля")
+@router.put("/{id}", summary="Обновить все поля отеля")
 async def update_hotel(
     id: int = Path(description="ИД отеля"),
     hotel_data: HotelUpdate = Body(openapi_examples=UPDATE_HOTEL_EXAMPLE),
@@ -70,7 +70,7 @@ async def update_hotel(
         return result
 
 
-@router.patch("/hotels/{id}", summary="Обновить выбранные поля отеля")
+@router.patch("/{id}", summary="Обновить выбранные поля отеля")
 async def edit_hotel(
     id: int = Path(description="ИД отеля"),
     hotel_data: HotelEdit = Body(openapi_examples=EDIT_HOTEL_EXAMPLE),
@@ -90,7 +90,7 @@ async def edit_hotel(
         return result
 
 
-@router.delete("/hotels/{id}", summary="Удалить отель")
+@router.delete("/{id}", summary="Удалить отель")
 async def delete_hotels(id: int):
     async with async_session_maker() as session:
         requested_hotel = await HotelsRepository(session).get_one_or_none(id=id)
