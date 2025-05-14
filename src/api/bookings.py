@@ -15,13 +15,9 @@ async def create_booking(db: DBDep, user_id: UserIdDep, booking_data: BookingAdd
 
     result = await db.bookings.add(
         BookingInsert(
-            **{
-                "room_id": booking_data.room_id,
-                "user_id": user_id,
-                "date_from": booking_data.date_from,
-                "date_to": booking_data.date_to,
-                "price": room.price,
-            }
+            user_id=user_id,
+            price=room.price,
+            **booking_data.model_dump()
         )
     )
     await db.commit()
