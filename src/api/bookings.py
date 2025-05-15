@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from src.api.dependencies import UserIdDep, DBDep
+from src.api.dependencies import UserIdDep, DBDep, PaginationDep
 from src.schemas.bookings import BookingAdd, BookingInsert
 
 router = APIRouter(prefix="/bookings", tags=["Бронирования"])
@@ -14,15 +14,19 @@ async def create_booking(db: DBDep, user_id: UserIdDep, booking_data: BookingAdd
         )
 
     result = await db.bookings.add(
-        BookingInsert(
-            **{
-                "room_id": booking_data.room_id,
-                "user_id": user_id,
-                "date_from": booking_data.date_from,
-                "date_to": booking_data.date_to,
-                "price": room.price,
-            }
-        )
+        BookingInsert(user_id=user_id, price=room.price, **booking_data.model_dump())
     )
     await db.commit()
+    return result
+
+
+@router.get("/", summary="Получить все бронирования")
+async def create_booking(db: DBDep, user_id: UserIdDep):
+    result = await db.bookings.get_all()
+    return result
+
+
+@router.get("/me", summary="Получить все свои бронирования")
+async def create_booking(db: DBDep, user_id: UserIdDep):
+    result = await db.bookings.get_all(id=user_id)
     return result
