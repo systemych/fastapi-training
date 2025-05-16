@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import Query, Path, Body, APIRouter, HTTPException, status
 
 from src.api.dependencies import DBDep
@@ -13,9 +14,14 @@ router = APIRouter(prefix="/rooms", tags=["Номера"])
 
 @router.get("/", summary="Получить список номеров отеля")
 async def get_rooms(
-    db: DBDep, hotel_id: int = Query(default=None, description="ИД отеля")
+    db: DBDep,
+    hotel_id: int = Query(default=None, description="ИД отеля"),
+    date_from: date = Query(example="2025-01-07"),
+    date_to: date = Query(example="2025-01-10"),
 ):
-    result = await db.rooms.get_all(hotel_id=hotel_id)
+    result = await db.rooms.get_all_by_date(
+        hotel_id=hotel_id, date_from=date_from, date_to=date_to
+    )
     return result
 
 
