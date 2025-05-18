@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import Query, Path, Body, APIRouter, HTTPException, status
 
 from src.api.dependencies import PaginationDep, DBDep
@@ -17,16 +18,19 @@ async def get_hotels(
     db: DBDep,
     title: str = Query(default=None, description="Название"),
     location: str = Query(default=None, description="Адрес"),
+    date_from: date = Query(default=None, description="Дата начала для заезда"),
+    date_to: date = Query(default=None, description="Дата окончания для заезда")
 ):
 
     result = await db.hotels.get_all(
         title=title,
         location=location,
+        date_from=date_from,
+        date_to=date_to,
         limit=pagination.per_page,
         offset=pagination.per_page * (pagination.page - 1),
     )
     return result
-
 
 @router.get("/{id}", summary="Получить информацию по отелю")
 async def get_hotel(db: DBDep, id: int = Path(description="ИД отеля")):

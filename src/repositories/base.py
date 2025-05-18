@@ -12,9 +12,12 @@ class BaseRepository:
     async def get_all(self, *filter, **filter_by):
         query = select(self.model).filter(*filter).filter_by(**filter_by)
         result = await self.session.execute(query)
+
+        models = result.scalars().all()
+        print(models)
         return [
             self.schema.model_validate(model, from_attributes=True)
-            for model in result.scalars().all()
+            for model in models
         ]
 
     async def get_one_or_none(self, **filter_by):
