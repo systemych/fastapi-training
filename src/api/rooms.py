@@ -2,7 +2,8 @@ from datetime import date
 from fastapi import Query, Path, Body, APIRouter, HTTPException, status
 
 from src.api.dependencies import DBDep
-from src.schemas.rooms import RoomAdd, RoomUpdate, RoomEdit
+from src.schemas.rooms import RoomAddRequest, RoomAddSchema, RoomUpdate, RoomEdit
+from src.schemas.options import RoomsOptionsAdd
 from src.assets.openapi_examples.rooms import (
     CREATE_ROOM_EXAMPLE,
     UPDATE_ROOM_EXAMPLE,
@@ -47,11 +48,15 @@ async def get_room(
 @router.post("/", summary="Создать номер в отеле")
 async def create_room(
     db: DBDep,
-    room_data: RoomAdd = Body(openapi_examples=CREATE_ROOM_EXAMPLE),
+    room_data: RoomAddRequest = Body(openapi_examples=CREATE_ROOM_EXAMPLE),
 ):
-    result = await db.rooms.add(room_data)
+    _room_data = RoomAddSchema(**room_data.model_dump())
+    room = await db.rooms.add(_room_data)
+
+    room_options = [RoomsOptionsAdd(room_id=room.id, option_id=o_id) for o_id in room_data.options_ids]
+    await db.rooms_options.add_bulk(room_options)
     await db.commit()
-    return result
+    return room
 
 
 @router.put("/{id}", summary="Обновить все поля номера")
