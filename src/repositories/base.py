@@ -14,7 +14,7 @@ class BaseRepository:
         result = await self.session.execute(query)
 
         models = result.scalars().all()
-        print(models)
+
         return [
             self.schema.model_validate(model, from_attributes=True)
             for model in models
@@ -50,6 +50,9 @@ class BaseRepository:
         return self.schema.model_validate(model, from_attributes=True)
 
     async def edit(self, data: BaseModel, exсlude_unset: bool = False, **filter_by):
+        if not data.model_dump(exclude_unset=exсlude_unset):
+            return await self.get_one_or_none(**filter_by)
+
         edit_hotel_stmt = (
             update(self.model)
             .filter_by(**filter_by)

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsOrm
