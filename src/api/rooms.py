@@ -2,7 +2,6 @@ from datetime import date
 from fastapi import Query, Path, Body, APIRouter, HTTPException, status
 
 from src.api.dependencies import DBDep
-from src.api.utils import update_room_options
 from src.schemas.rooms import (
     RoomAddRequest,
     RoomAddSchema,
@@ -90,7 +89,7 @@ async def update_room(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
 
-    await update_room_options(db, id, updated_room, RoomsOptionsAdd)
+    await db.rooms_options.update(id, updated_room.options_ids)
     updated_room = await db.rooms.update(_updated_room, id=id)
     await db.commit()
 
@@ -118,7 +117,7 @@ async def edit_room(
         )
 
     if edited_room.options_ids:
-        await update_room_options(db, id, edited_room, RoomsOptionsAdd)
+        await db.rooms_options.update(id, edited_room.options_ids)
 
     updated_room = await db.rooms.edit(_edited_room, exсlude_unset=True, id=id)
     await db.commit()

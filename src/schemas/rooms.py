@@ -44,10 +44,10 @@ class RoomEditRequest(BaseModel):
     options_ids: list[int] | None = Field(default=None, description="ИД добавляемых опций номера")
 
 class RoomEditSchema(BaseModel):
-    title: str | None
-    description: str | None
-    price: int | None
-    quantity: int | None
+    title: str | None = None
+    description: str | None = None
+    price: int | None = None
+    quantity: int | None = None
 
 class RoomResponse(BaseModel):
     id: int = Field(description="ИД номера")
