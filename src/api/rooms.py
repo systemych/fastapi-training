@@ -2,7 +2,16 @@ from datetime import date
 from fastapi import Query, Path, Body, APIRouter, HTTPException, status
 
 from src.api.dependencies import DBDep
-from src.schemas.rooms import RoomAdd, RoomUpdate, RoomEdit
+from src.schemas.rooms import (
+    RoomAddRequest,
+    RoomAddSchema,
+    RoomUpdateRequest,
+    RoomUpdateSchema,
+    RoomEditRequest,
+    RoomEditSchema,
+    RoomResponse,
+)
+from src.schemas.options import RoomsOptionsAdd
 from src.assets.openapi_examples.rooms import (
     CREATE_ROOM_EXAMPLE,
     UPDATE_ROOM_EXAMPLE,
@@ -47,10 +56,22 @@ async def get_room(
 @router.post("/", summary="Создать номер в отеле")
 async def create_room(
     db: DBDep,
-    room_data: RoomAdd = Body(openapi_examples=CREATE_ROOM_EXAMPLE),
+    room_data: RoomAddRequest = Body(openapi_examples=CREATE_ROOM_EXAMPLE),
 ):
-    result = await db.rooms.add(room_data)
+    _room_data = RoomAddSchema(**room_data.model_dump())
+    room = await db.rooms.add(_room_data)
+
+    room_options = [
+        RoomsOptionsAdd(room_id=room.id, option_id=o_id)
+        for o_id in room_data.options_ids
+    ]
+    await db.rooms_options.add_bulk(room_options)
     await db.commit()
+
+    result = RoomResponse(
+        options_ids=room_data.options_ids,
+        **room.model_dump()
+    )
     return result
 
 
@@ -58,17 +79,26 @@ async def create_room(
 async def update_room(
     db: DBDep,
     id: int = Path(description="ИД номера"),
-    room_data: RoomUpdate = Body(openapi_examples=UPDATE_ROOM_EXAMPLE),
+    updated_room: RoomUpdateRequest = Body(openapi_examples=UPDATE_ROOM_EXAMPLE),
 ):
-    requested_room = await db.rooms.get_one_or_none(id=id)
+    _updated_room = RoomUpdateSchema(**updated_room.model_dump())
+    current_room = await db.rooms.get_one_or_none(id=id)
 
-    if requested_room is None:
+    if current_room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
 
-    result = await db.rooms.update(room_data, id=id)
+    await db.rooms_options.update(id, updated_room.options_ids)
+    updated_room = await db.rooms.update(_updated_room, id=id)
     await db.commit()
+
+    room_options = await db.rooms_options.get_all(room_id=id)
+
+    result = RoomResponse(
+        options_ids=[item.option_id for item in room_options],
+        **updated_room.model_dump()
+    )
     return result
 
 
@@ -76,17 +106,28 @@ async def update_room(
 async def edit_room(
     db: DBDep,
     id: int = Path(description="ИД номера"),
-    room_data: RoomEdit = Body(openapi_examples=EDIT_ROOM_EXAMPLE),
+    edited_room: RoomEditRequest = Body(openapi_examples=EDIT_ROOM_EXAMPLE),
 ):
-    requested_room = await db.rooms.get_one_or_none(id=id)
+    _edited_room = RoomEditSchema(**edited_room.model_dump(exclude_unset=True))
 
-    if requested_room is None:
+    current_room = await db.rooms.get_one_or_none(id=id)
+    if current_room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
 
-    result = await db.rooms.edit(room_data, exсlude_unset=True, id=id)
+    if edited_room.options_ids:
+        await db.rooms_options.update(id, edited_room.options_ids)
+
+    updated_room = await db.rooms.edit(_edited_room, exсlude_unset=True, id=id)
     await db.commit()
+
+    room_options = await db.rooms_options.get_all(room_id=id)
+
+    result = RoomResponse(
+        options_ids=[item.option_id for item in room_options],
+        **updated_room.model_dump()
+    )
     return result
 
 
