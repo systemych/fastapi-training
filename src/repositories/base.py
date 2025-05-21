@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 
+from src.repositories.mappers.base import DataMapper
 
 class BaseRepository:
     model = None
-    schema: BaseModel = None
+    mapper: DataMapper = None
 
     def __init__(self, session):
         self.session = session
@@ -16,7 +17,7 @@ class BaseRepository:
         models = result.scalars().all()
 
         return [
-            self.schema.model_validate(model, from_attributes=True)
+            self.mapper.map_to_domain_entity(model)
             for model in models
         ]
 
@@ -26,13 +27,13 @@ class BaseRepository:
         model = result.scalars().one_or_none()
         if model is None:
             return None
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):
         add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         result = await self.session.execute(add_stmt)
         model = result.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entity(model)
 
     async def add_bulk(self, data: list[BaseModel]):
         add_stmt = insert(self.model).values([item.model_dump() for item in data])
@@ -47,7 +48,7 @@ class BaseRepository:
         )
         result = await self.session.execute(update_hotel_stmt)
         model = result.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entity(model)
 
     async def edit(self, data: BaseModel, exсlude_unset: bool = False, **filter_by):
         if not data.model_dump(exclude_unset=exсlude_unset):
@@ -62,7 +63,7 @@ class BaseRepository:
 
         result = await self.session.execute(edit_hotel_stmt)
         model = result.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entity(model)
 
     async def delete(self, **filter_by):
         delete_hotel_stmt = delete(self.model).filter_by(**filter_by)

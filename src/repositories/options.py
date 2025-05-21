@@ -1,13 +1,14 @@
 from sqlalchemy import delete
 
-from src.repositories.base import BaseRepository
 from src.models.options import OptionsOrm, RoomsOptionsOrm
+from src.repositories.base import BaseRepository
+from src.repositories.mappers.mappers import OptionDataMapper
 from src.schemas.options import OptionSchema, RoomOptionSchema, RoomsOptionsAdd
 
 
 class OptionsRepository(BaseRepository):
     model = OptionsOrm
-    schema = OptionSchema
+    mapper = OptionDataMapper
 
 class RoomsOptionsRepository(BaseRepository):
     model = RoomsOptionsOrm

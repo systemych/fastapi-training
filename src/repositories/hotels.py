@@ -1,15 +1,15 @@
 from sqlalchemy import select
 
-from src.repositories.base import BaseRepository
 from src.models.hotels import HotelsOrm
-from src.schemas.hotels import HotelSchema
+from src.repositories.base import BaseRepository
+from src.repositories.mappers.mappers import HotelDataMapper
 
 from src.models.rooms import RoomsOrm
 from src.repositories.utils import get_rooms_by_date
 
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
-    schema = HotelSchema
+    mapper = HotelDataMapper
 
     async def get_all(self, title, location, date_from, date_to, limit, offset):
         query = select(self.model)
@@ -33,4 +33,4 @@ class HotelsRepository(BaseRepository):
         query = query.limit(limit).offset(offset)
         result = await self.session.execute(query)
 
-        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+        return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()]

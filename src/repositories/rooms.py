@@ -1,15 +1,15 @@
 from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
-from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsOrm
-from src.schemas.rooms import RoomSchema, RoomWithOptionsSchema
+from src.repositories.base import BaseRepository
 from src.repositories.utils import get_rooms_by_date
+from src.repositories.mappers.mappers import RoomWithOptionsDataMapper
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsOrm
-    schema = RoomSchema
+    mapper = RoomWithOptionsDataMapper
 
     async def get_all(self, hotel_id, date_from, date_to):
         # не нравится, как реализовано, в техдолг
@@ -25,7 +25,7 @@ class RoomsRepository(BaseRepository):
                 result.append(room_orm)
 
             return [
-                RoomWithOptionsSchema.model_validate(model, from_attributes=True)
+                self.mapper.map_to_domain_entity(model)
                 for model in result
             ]
 
@@ -36,7 +36,7 @@ class RoomsRepository(BaseRepository):
 
         result = await self.session.execute(query)
         return [
-            RoomWithOptionsSchema.model_validate(model, from_attributes=True)
+            self.mapper.map_to_domain_entity(model)
             for model in result.scalars().all()
         ]
 
@@ -53,4 +53,4 @@ class RoomsRepository(BaseRepository):
         if model is None:
             return None
 
-        return RoomWithOptionsSchema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entity(model)
