@@ -1,6 +1,7 @@
 from datetime import date
 
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload, joinedload
 
 from src.models.rooms import RoomsOrm
 from src.models.bookings import BookingsOrm
@@ -56,17 +57,11 @@ def get_rooms_by_date(
         query_filter = [cte_rooms_left.c.rooms_left > 0]
 
     query = (
-        select(
-            RoomsOrm.id,
-            RoomsOrm.hotel_id,
-            RoomsOrm.title,
-            RoomsOrm.description,
-            RoomsOrm.price,
-            cte_rooms_left.c.rooms_left.label("quantity"),
-        )
-        .select_from(RoomsOrm)
-        .outerjoin(cte_rooms_left, RoomsOrm.id == cte_rooms_left.c.id)
+        select(RoomsOrm)
+        .join(cte_rooms_left, RoomsOrm.id == cte_rooms_left.c.id)
         .filter(*query_filter)
+        .options(selectinload(RoomsOrm.options))
+        .add_columns(cte_rooms_left.c.rooms_left.label("quantity"))
     )
 
     return query
