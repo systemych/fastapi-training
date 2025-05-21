@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from src.schemas.options import OptionSchema
 
 class RoomSchema(BaseModel):
     id: int
@@ -7,6 +8,9 @@ class RoomSchema(BaseModel):
     description: str | None
     price: int
     quantity: int
+
+class RoomWithOptionsSchema(RoomSchema):
+    options: list[OptionSchema] | None
 
 class RoomAddRequest(BaseModel):
     hotel_id: int = Field(description="ИД отеля")
@@ -56,4 +60,4 @@ class RoomResponse(BaseModel):
     description: str | None = Field(default=None, description="Описание")
     price: int = Field(description="Стоимость")
     quantity: int = Field(description="Количество")
-    options_ids: list[int] | None = Field(default=None, description="ИД опций номера")
+    options: list[OptionSchema] | None = Field(default=None, description="Опции номера")
