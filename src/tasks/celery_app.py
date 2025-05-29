@@ -9,3 +9,10 @@ task_queue = Celery(
         "src.tasks.tasks"
     ]
 )
+
+task_queue.conf.beat_schedule = {
+    "kot_nasral": {
+        "task": "booking_today_checkin",
+        "schedule": 5,
+    }
+}
