@@ -1,4 +1,6 @@
 import redis.asyncio as redis
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 
 
 class RedisManager:
@@ -9,6 +11,8 @@ class RedisManager:
 
     async def connect(self):
         self.redis = await redis.Redis(host=self.host, port=self.port)
+        FastAPICache.init(RedisBackend(self.redis), prefix="fastapi-cache")
+
 
     async def set(self, key: str, value: str, expire: int = None):
         if expire:

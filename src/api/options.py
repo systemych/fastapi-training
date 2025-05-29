@@ -1,6 +1,8 @@
 import json
 
 from fastapi import APIRouter, HTTPException, Path, status
+from fastapi_cache.decorator import cache
+
 from src.init import redis_manager
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.options import OptionAdd, OptionUpdate
@@ -22,18 +24,9 @@ async def create_option(db: DBDep, user_id: UserIdDep, option_data: OptionAdd):
 
 
 @router.get("/", summary="Получить список опций")
+@cache(expire=60)
 async def get_options(db: DBDep, user_id: UserIdDep):
-    options_from_cache = await redis_manager.get("options")
-    if not options_from_cache:
-        print("ИДУ В БАЗУ ДАННЫХ")
-        options = await db.options.get_all()
-        options_schemas: list[dict] = [f.model_dump() for f in options]
-        options_json = json.dumps(options_schemas)
-        await redis_manager.set("options", options_json, 10)
-        return options
-    else:
-        options_dicts = json.loads(options_from_cache)
-        return options_dicts
+    return await db.options.get_all()
 
 
 @router.put("/{id}", summary="Обновить опцию")

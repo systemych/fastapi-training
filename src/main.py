@@ -15,7 +15,7 @@ from src.api.bookings import router as router_bookings
 from src.api.options import router as router_options
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     await redis_manager.connect()
     yield
     await redis_manager.close()
