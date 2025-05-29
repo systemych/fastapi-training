@@ -43,10 +43,10 @@ def resize_image(image_path):
 
 
 async def get_bookings_with_today_checkin_helper():
-    print("Я ЗАПУСКАЮСЬ")
+    print(f"Start: booking_today_checkin")
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         bookings = await db.bookings.get_bookings_with_today_checkin()
-        print(f"{bookings=}")
+        print(f"{bookings}")
 
 
 @task_queue.task(name="booking_today_checkin")
