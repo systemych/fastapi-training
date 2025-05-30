@@ -1,6 +1,12 @@
+import json
+
 from fastapi import APIRouter, HTTPException, Path, status
+from fastapi_cache.decorator import cache
+
+from src.init import redis_manager
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.options import OptionAdd, OptionUpdate
+from src.tasks.tasks import test_task
 
 router = APIRouter(prefix="/options", tags=["Опции номеров"])
 
@@ -19,9 +25,10 @@ async def create_option(db: DBDep, user_id: UserIdDep, option_data: OptionAdd):
 
 
 @router.get("/", summary="Получить список опций")
+@cache(expire=60)
 async def get_options(db: DBDep, user_id: UserIdDep):
-    result = await db.options.get_all()
-    return result
+    test_task.delay()
+    return await db.options.get_all()
 
 
 @router.put("/{id}", summary="Обновить опцию")
