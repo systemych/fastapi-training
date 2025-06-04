@@ -27,3 +27,6 @@ class DBManager():
 
     async def commit(self):
         await self.sesion.commit()
+
+    async def flush(self):
+        await self.sesion.flush()

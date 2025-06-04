@@ -59,18 +59,21 @@ async def create_room(
     room_data: RoomAddRequest = Body(openapi_examples=CREATE_ROOM_EXAMPLE),
 ):
     _room_data = RoomAddSchema(**room_data.model_dump())
-    room = await db.rooms.add(_room_data)
+    room_id = await db.rooms.add(_room_data)
+    await db.flush()
+    room = await db.rooms.get_one_or_none(id=room_id)
 
-    room_options = [
-        RoomsOptionsAdd(room_id=room.id, option_id=o_id)
-        for o_id in room_data.options_ids
-    ]
-    await db.rooms_options.add_bulk(room_options)
+    if room_data.options_ids:
+        room_options = [
+            RoomsOptionsAdd(room_id=room.id, option_id=o_id)
+            for o_id in room_data.options_ids
+        ]
+        await db.rooms_options.add_bulk(room_options)
     await db.commit()
 
     result = RoomResponse(
         options_ids=room_data.options_ids,
-        **room.model_dump()
+        **room.model_dump(exclude_none=True)
     )
     return result
 
@@ -90,10 +93,11 @@ async def update_room(
         )
 
     await db.rooms_options.update(id, updated_room.options_ids)
-    updated_room = await db.rooms.update(_updated_room, id=id)
+    await db.rooms.update(_updated_room, id=id)
     await db.commit()
 
     room_options = await db.rooms_options.get_all(room_id=id)
+    updated_room = await db.rooms.get_one_or_none(id=id)
 
     result = RoomResponse(
         options_ids=[item.option_id for item in room_options],
@@ -119,10 +123,11 @@ async def edit_room(
     if edited_room.options_ids:
         await db.rooms_options.update(id, edited_room.options_ids)
 
-    updated_room = await db.rooms.edit(_edited_room, exсlude_unset=True, id=id)
+    await db.rooms.edit(_edited_room, exсlude_unset=True, id=id)
     await db.commit()
 
     room_options = await db.rooms_options.get_all(room_id=id)
+    updated_room = await db.rooms.get_one_or_none(id=id)
 
     result = RoomResponse(
         options_ids=[item.option_id for item in room_options],
@@ -140,6 +145,7 @@ async def delete_room(db: DBDep, id: int):
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
 
+    await db.rooms_options.delete_bulk_by_option_id(ids=[option.id for option in requested_room.options])
     await db.rooms.delete(id=id)
     await db.commit()
     return "OK"

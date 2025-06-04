@@ -2,22 +2,20 @@ from sqlalchemy import delete
 
 from src.models.options import OptionsOrm, RoomsOptionsOrm
 from src.repositories.base import BaseRepository
-from src.repositories.mappers.mappers import OptionDataMapper
 from src.schemas.options import OptionSchema, RoomOptionSchema, RoomsOptionsAdd
 
 
 class OptionsRepository(BaseRepository):
     model = OptionsOrm
-    mapper = OptionDataMapper
+    schema = OptionSchema
 
 class RoomsOptionsRepository(BaseRepository):
     model = RoomsOptionsOrm
     schema = RoomOptionSchema
 
     async def delete_bulk_by_option_id(self, ids):
-        delete_hotel_stmt = delete(self.model).filter(self.model.option_id.in_(ids))
-        await self.session.execute(delete_hotel_stmt)
-
+        delete_stmt = delete(self.model).filter(self.model.option_id.in_(ids))
+        await self.session.execute(delete_stmt)
 
     async def update(self, room_id, options_ids: list[int]):
         current_room_options = await self.get_all(room_id=room_id)
