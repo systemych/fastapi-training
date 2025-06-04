@@ -57,29 +57,29 @@ class RoomsRepository(BaseRepository):
         return self.map_to_domain_entity(model)
 
 
-    async def add(self, data: BaseModel):
-        add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model.id)
+    async def add(self, data: BaseModel, exclude_unset: bool = False):
+        add_stmt = insert(self.model).values(**data.model_dump(exclude_unset=exclude_unset)).returning(self.model.id)
         result = await self.session.execute(add_stmt)
         return result.scalars().one()
 
 
-    async def update(self, data: BaseModel, exсlude_unset: bool = False, **filter_by):
+    async def update(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
         update_stmt = (
             update(self.model)
             .filter_by(**filter_by)
-            .values(**data.model_dump(exclude_unset=exсlude_unset))
+            .values(**data.model_dump(exclude_unset=exclude_unset))
         )
         await self.session.execute(update_stmt)
 
 
-    async def edit(self, data: BaseModel, exсlude_unset: bool = False, **filter_by):
-        if not data.model_dump(exclude_unset=exсlude_unset):
+    async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
+        if not data.model_dump(exclude_unset=exclude_unset):
             return await self.get_one_or_none(**filter_by)
 
         edit_stmt = (
             update(self.model)
             .filter_by(**filter_by)
-            .values(**data.model_dump(exclude_unset=exсlude_unset))
+            .values(**data.model_dump(exclude_unset=exclude_unset))
         )
 
         await self.session.execute(edit_stmt)
