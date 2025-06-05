@@ -12,7 +12,7 @@ class RoomsRepository(BaseRepository):
     model = RoomsOrm
     schema = RoomWithOptionsSchema
 
-    async def get_all(self, hotel_id, date_from, date_to):
+    async def get_all(self, hotel_id=None, date_from=None, date_to=None):
         # не нравится, как реализовано, в техдолг
         if date_from or date_to:
             query_get_rooms_by_date = get_rooms_by_date(
