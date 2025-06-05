@@ -19,3 +19,6 @@ class BookingInsert(BookingAdd):
     price: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class BookingUpdate(BookingAdd):
+    ...
