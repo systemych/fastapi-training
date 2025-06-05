@@ -16,6 +16,12 @@ def check_test_mode():
     assert settings.MODE == "TEST"
 
 
+@pytest.fixture(scope="function")
+async def db() -> DBManager:
+    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+        yield db
+
+
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database(check_test_mode):
     async with engine_null_pool.begin() as conn:
@@ -35,11 +41,16 @@ async def setup_database(check_test_mode):
         await db.commit()
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def create_user(setup_database):
+@pytest.fixture(scope="session")
+async def ac() -> AsyncClient:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        await ac.post(
-            "/auth/register", json={"email": "ivanov@company.com", "password": "qwerty"}
-        )
+        yield ac
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def create_user(ac, setup_database):
+    await ac.post(
+        "/auth/register", json={"email": "ivanov@company.com", "password": "qwerty"}
+    )
