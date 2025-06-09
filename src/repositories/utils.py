@@ -1,7 +1,7 @@
 from datetime import date
 
 from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 
 from src.models.rooms import RoomsOrm
 from src.models.bookings import BookingsOrm
