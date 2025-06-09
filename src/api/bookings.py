@@ -13,9 +13,28 @@ async def create_booking(db: DBDep, user_id: UserIdDep, booking_data: BookingAdd
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
 
+    hotel_id = room.hotel_id
+    hotel_rooms_on_date = await db.rooms.get_all(
+        hotel_id=hotel_id,
+        date_from=booking_data.date_from,
+        date_to=booking_data.date_to,
+    )
+
+    room_is_available = (
+        len(list(filter(lambda r: r.id == booking_data.room_id, hotel_rooms_on_date)))
+        > 0
+    )
+
+    if not room_is_available:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Room is not available on date period",
+        )
+
     result = await db.bookings.add(
         BookingInsert(user_id=user_id, price=room.price, **booking_data.model_dump())
     )
+
     await db.commit()
     return result
 

@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update
 from sqlalchemy.orm import selectinload
@@ -20,10 +22,12 @@ class RoomsRepository(BaseRepository):
             )
 
             rooms_by_date = await self.session.execute(query_get_rooms_by_date)
+
             result = []
             for room_orm, new_quantity in rooms_by_date.all():
-                room_orm.quantity = new_quantity
-                result.append(room_orm)
+                updated_room = deepcopy(room_orm)
+                updated_room.quantity = new_quantity
+                result.append(updated_room)
 
             return [
                 self.map_to_domain_entity(model)
