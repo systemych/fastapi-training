@@ -1,8 +1,10 @@
 import json
+from unittest import mock
+
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
+
 import pytest
 from httpx import AsyncClient, ASGITransport
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.inmemory import InMemoryBackend
 
 from src.main import app
 from src.api.dependencies import get_db_manager
@@ -50,9 +52,6 @@ async def setup_database(check_test_mode):
 
 @pytest.fixture(scope="session")
 async def ac() -> AsyncClient:
-    # подключение поддержки кэша в методах АПИ
-    FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache-test")
-
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
