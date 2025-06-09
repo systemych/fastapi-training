@@ -1,6 +1,8 @@
 import json
 import pytest
 from httpx import AsyncClient, ASGITransport
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
 
 from src.main import app
 from src.api.dependencies import get_db_manager
@@ -48,6 +50,9 @@ async def setup_database(check_test_mode):
 
 @pytest.fixture(scope="session")
 async def ac() -> AsyncClient:
+    # подключение поддержки кэша в методах АПИ
+    FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache-test")
+
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
@@ -58,4 +63,7 @@ async def ac() -> AsyncClient:
 async def create_user(ac, setup_database):
     await ac.post(
         "/auth/register", json={"email": "ivanov@company.com", "password": "qwerty"}
+    )
+    await ac.post(
+        "/auth/login", json={"email": "ivanov@company.com", "password": "qwerty"}
     )
