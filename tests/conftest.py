@@ -63,6 +63,14 @@ async def create_user(ac, setup_database):
     await ac.post(
         "/auth/register", json={"email": "ivanov@company.com", "password": "qwerty"}
     )
-    await ac.post(
+
+@pytest.fixture(scope="session", autouse=True)
+async def auth_ac(ac) -> AsyncClient:
+    res = await ac.post(
         "/auth/login", json={"email": "ivanov@company.com", "password": "qwerty"}
     )
+
+    token = res.cookies.get("access_token", None)
+    assert token
+
+    ac.cookies = res.cookies
