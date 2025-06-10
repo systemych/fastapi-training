@@ -1,5 +1,5 @@
 from datetime import date
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from src.models.bookings import BookingsOrm
 from src.schemas.bookings import BookingSchema
