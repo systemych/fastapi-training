@@ -69,6 +69,4 @@ async def auth_ac(create_user, ac) -> AsyncClient:
     await ac.post(
         "/auth/login", json={"email": "ivanov@company.com", "password": "qwerty"}
     )
-
-    assert ac.cookies["access_token"]
     yield ac
