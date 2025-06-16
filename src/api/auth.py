@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Body, HTTPException, status, Response
 
 from src.schemas.users import UserRegister, UserAdd
@@ -38,6 +39,8 @@ async def login_user(
 
     access_token = AuthService().create_access_token({"user_id": user.id})
     response.set_cookie("access_token", access_token)
+
+    logging.info(f"Пользователь {data.email} аутентифицирован")
     return {"access_token": access_token}
 
 
