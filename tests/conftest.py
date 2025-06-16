@@ -1,3 +1,5 @@
+# ruff: noqa: E402
+
 import json
 from unittest import mock
 
@@ -13,7 +15,7 @@ from src.database import Base, engine_null_pool, async_session_maker_null_pool
 from src.utils.db_manager import DBManager
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomAddRequest
-from src.models import *
+from src.models import * # noqa
 
 
 @pytest.fixture(scope="session", autouse=True)

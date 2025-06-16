@@ -5,7 +5,6 @@ from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep, DBDep
 from src.assets.openapi_examples.users import CREATE_USER_EXAMPLE, LOGIN_USER_EXAMPLE
 
-import json
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация и авторизация"])
 
@@ -28,7 +27,7 @@ async def register_user(
 
 
 @router.post("/login", summary="Аутентифицировать пользователя")
-async def register_user(
+async def login_user(
     db: DBDep,
     response: Response,
     data: UserRegister = Body(openapi_examples=LOGIN_USER_EXAMPLE),
@@ -54,7 +53,7 @@ async def logout_user(
 ):
     try:
         response.delete_cookie("access_token")
-    except:
+    except Exception:
         pass
     return "OK"
 

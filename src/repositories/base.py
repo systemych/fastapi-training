@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 
-from src.repositories.mappers.base import DataMapper
-
 class BaseRepository:
     model = None
     schema = None

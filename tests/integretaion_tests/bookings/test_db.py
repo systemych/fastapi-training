@@ -1,5 +1,5 @@
 from datetime import date
-from src.schemas.bookings import BookingInsert, BookingUpdate
+from src.schemas.bookings import BookingInsert
 
 async def test_booking_crud(db):
     user_id = (await db.users.get_all())[0].id
