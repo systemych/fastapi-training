@@ -9,6 +9,7 @@ class OptionsRepository(BaseRepository):
     model = OptionsOrm
     schema = OptionSchema
 
+
 class RoomsOptionsRepository(BaseRepository):
     model = RoomsOptionsOrm
     schema = RoomOptionSchema
@@ -25,6 +26,8 @@ class RoomsOptionsRepository(BaseRepository):
         options_to_delete = list(set(current_room_options_ids) - set(options_ids))
 
         if len(options_to_add) > 0:
-            await self.add_bulk([RoomsOptionsAdd(room_id=room_id, option_id=o_id) for o_id in options_to_add])
+            await self.add_bulk(
+                [RoomsOptionsAdd(room_id=room_id, option_id=o_id) for o_id in options_to_add]
+            )
         if len(options_to_delete) > 0:
             await self.delete_bulk_by_option_id(options_to_delete)

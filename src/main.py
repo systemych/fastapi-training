@@ -4,6 +4,7 @@ import uvicorn
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.init import redis_manager
@@ -15,11 +16,13 @@ from src.api.bookings import router as router_bookings
 from src.api.options import router as router_options
 from src.api.images import router as router_images
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await redis_manager.connect()
     yield
     await redis_manager.close()
+
 
 app = FastAPI(lifespan=lifespan)
 

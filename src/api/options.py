@@ -12,9 +12,7 @@ router = APIRouter(prefix="/options", tags=["Опции номеров"])
 async def create_option(db: DBDep, user_id: UserIdDep, option_data: OptionAdd):
     option = await db.options.get_one_or_none(title=option_data.title)
     if option:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Item already exist"
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exist")
 
     result = await db.options.add(option_data)
     await db.commit()
@@ -37,9 +35,7 @@ async def update_option(
 ):
     option = await db.options.get_one_or_none(id=id)
     if option is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     result = await db.options.update(option_data, id=id)
     return result

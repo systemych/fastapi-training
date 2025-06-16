@@ -43,15 +43,14 @@ async def delete_all_bookings(db):
         (1, "2025-06-09", "2025-06-10", 3),
     ],
 )
-async def test_add_and_get_my_bookings(room_id, date_from, date_to, counter, delete_all_bookings, db, ac):
+async def test_add_and_get_my_bookings(
+    room_id, date_from, date_to, counter, delete_all_bookings, db, ac
+):
     await ac.post(
         "/bookings",
         follow_redirects=True,
         json={"room_id": room_id, "date_from": date_from, "date_to": date_to},
     )
-    response = await ac.get(
-        "/bookings/me",
-        follow_redirects=True
-    )
+    response = await ac.get("/bookings/me", follow_redirects=True)
 
     assert len(response.json()) == counter

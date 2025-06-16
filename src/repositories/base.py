@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 
+
 class BaseRepository:
     model = None
     schema = None
-    #mapper: DataMapper = None
+    # mapper: DataMapper = None
 
     def __init__(self, session):
         self.session = session
@@ -18,10 +19,7 @@ class BaseRepository:
 
         models = result.scalars().all()
 
-        return [
-            self.map_to_domain_entity(model)
-            for model in models
-        ]
+        return [self.map_to_domain_entity(model) for model in models]
 
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)

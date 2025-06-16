@@ -15,23 +15,27 @@ from src.database import Base, engine_null_pool, async_session_maker_null_pool
 from src.utils.db_manager import DBManager
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomAddRequest
-from src.models import * # noqa
+from src.models import *  # noqa
 
 
 @pytest.fixture(scope="session", autouse=True)
 def check_test_mode():
     assert settings.MODE == "TEST"
 
+
 async def get_db_null_pool():
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
+
 
 @pytest.fixture(scope="session")
 async def db() -> DBManager:
     async for db in get_db_null_pool():
         yield db
 
+
 app.dependency_overrides[get_db_manager] = get_db_null_pool
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database(check_test_mode):
@@ -65,6 +69,7 @@ async def create_user(ac, setup_database):
     await ac.post(
         "/auth/register", json={"email": "ivanov@company.com", "password": "qwerty"}
     )
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def auth_ac(create_user, ac) -> AsyncClient:

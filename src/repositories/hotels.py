@@ -7,6 +7,7 @@ from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsOrm
 from src.repositories.utils import get_rooms_by_date
 
+
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
     schema = HotelSchema

@@ -8,6 +8,7 @@ from src.database import Base
 if typing.TYPE_CHECKING:
     from src.models import OptionsOrm
 
+
 class RoomsOrm(Base):
     __tablename__ = "rooms"
 
@@ -19,6 +20,5 @@ class RoomsOrm(Base):
     quantity: Mapped[int]
 
     options: Mapped[list["OptionsOrm"] | None] = relationship(
-        back_populates="rooms",
-        secondary="rooms_options"
+        back_populates="rooms", secondary="rooms_options"
     )

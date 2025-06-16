@@ -18,9 +18,7 @@ async def register_user(
     new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
     user_with_same_email = await db.users.get_one_or_none(email=data.email)
     if user_with_same_email:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User is existing"
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User is existing")
     result = await db.users.add(new_user_data)
     await db.commit()
     return result
@@ -34,13 +32,9 @@ async def login_user(
 ):
     user = await db.users.get_user_with_hashed_password(email=data.email)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if not AuthService().verify_password(data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
 
     access_token = AuthService().create_access_token({"user_id": user.id})
     response.set_cookie("access_token", access_token)

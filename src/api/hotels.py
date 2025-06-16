@@ -19,9 +19,8 @@ async def get_hotels(
     title: str = Query(default=None, description="Название"),
     location: str = Query(default=None, description="Адрес"),
     date_from: date = Query(default=None, description="Дата начала для заезда"),
-    date_to: date = Query(default=None, description="Дата окончания для заезда")
+    date_to: date = Query(default=None, description="Дата окончания для заезда"),
 ):
-
     result = await db.hotels.get_all(
         title=title,
         location=location,
@@ -32,14 +31,13 @@ async def get_hotels(
     )
     return result
 
+
 @router.get("/{id}", summary="Получить информацию по отелю")
 async def get_hotel(db: DBDep, id: int = Path(description="ИД отеля")):
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     return requested_hotel
 
 
@@ -62,9 +60,7 @@ async def update_hotel(
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     result = await db.hotels.update(hotel_data, id=id)
     await db.commit()
@@ -80,9 +76,7 @@ async def edit_hotel(
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     result = await db.hotels.edit(hotel_data, exсlude_unset=True, id=id)
     await db.commit()
@@ -94,9 +88,7 @@ async def delete_hotels(db: DBDep, id: int):
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     await db.hotels.delete(id=id)
     await db.commit()

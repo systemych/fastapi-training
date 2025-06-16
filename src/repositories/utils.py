@@ -12,7 +12,6 @@ def get_rooms_by_date(
     date_to: date,
     hotel_id: int | None = None,
 ):
-
     cte_rooms_booked = (
         select(BookingsOrm.room_id, func.count("*").label("count"))
         .select_from(BookingsOrm)
@@ -33,9 +32,7 @@ def get_rooms_by_date(
     cte_rooms_left = (
         select(
             RoomsOrm.id,
-            (RoomsOrm.quantity - func.coalesce(cte_rooms_booked.c.count, 0)).label(
-                "rooms_left"
-            ),
+            (RoomsOrm.quantity - func.coalesce(cte_rooms_booked.c.count, 0)).label("rooms_left"),
         )
         .select_from(RoomsOrm)
         .outerjoin(cte_rooms_booked, RoomsOrm.id == cte_rooms_booked.c.room_id)
@@ -44,9 +41,7 @@ def get_rooms_by_date(
 
     if hotel_id:
         rooms_ids_by_hotel_id = (
-            select(RoomsOrm.id)
-            .select_from(RoomsOrm)
-            .filter(RoomsOrm.hotel_id == hotel_id)
+            select(RoomsOrm.id).select_from(RoomsOrm).filter(RoomsOrm.hotel_id == hotel_id)
         )
 
         query_filter = [
