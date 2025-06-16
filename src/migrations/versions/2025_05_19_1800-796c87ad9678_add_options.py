@@ -31,12 +31,8 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("room_id", sa.Integer(), nullable=False),
         sa.Column("option_id", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["option_id"], ["options.id"], name="rooms_options_option_id_idx"
-        ),
-        sa.ForeignKeyConstraint(
-            ["room_id"], ["rooms.id"], name="rooms_options_room_id_idx"
-        ),
+        sa.ForeignKeyConstraint(["option_id"], ["options.id"], name="rooms_options_option_id_idx"),
+        sa.ForeignKeyConstraint(["room_id"], ["rooms.id"], name="rooms_options_room_id_idx"),
         sa.PrimaryKeyConstraint("id"),
     )
 

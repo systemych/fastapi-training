@@ -29,10 +29,7 @@ class RoomsRepository(BaseRepository):
                 updated_room.quantity = new_quantity
                 result.append(updated_room)
 
-            return [
-                self.map_to_domain_entity(model)
-                for model in result
-            ]
+            return [self.map_to_domain_entity(model) for model in result]
 
         query = select(self.model).options(selectinload(self.model.options))
 
@@ -40,17 +37,10 @@ class RoomsRepository(BaseRepository):
             query = query.filter_by(hotel_id=hotel_id)
 
         result = await self.session.execute(query)
-        return [
-            self.map_to_domain_entity(model)
-            for model in result.scalars().all()
-        ]
+        return [self.map_to_domain_entity(model) for model in result.scalars().all()]
 
     async def get_one_or_none(self, **filter_by):
-        query = (
-            select(self.model)
-            .options(selectinload(self.model.options))
-            .filter_by(**filter_by)
-        )
+        query = select(self.model).options(selectinload(self.model.options)).filter_by(**filter_by)
 
         result = await self.session.execute(query)
         model = result.scalars().one_or_none()
@@ -60,12 +50,14 @@ class RoomsRepository(BaseRepository):
 
         return self.map_to_domain_entity(model)
 
-
     async def add(self, data: BaseModel, exclude_unset: bool = False):
-        add_stmt = insert(self.model).values(**data.model_dump(exclude_unset=exclude_unset)).returning(self.model.id)
+        add_stmt = (
+            insert(self.model)
+            .values(**data.model_dump(exclude_unset=exclude_unset))
+            .returning(self.model.id)
+        )
         result = await self.session.execute(add_stmt)
         return result.scalars().one()
-
 
     async def update(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
         update_stmt = (
@@ -74,7 +66,6 @@ class RoomsRepository(BaseRepository):
             .values(**data.model_dump(exclude_unset=exclude_unset))
         )
         await self.session.execute(update_stmt)
-
 
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
         if not data.model_dump(exclude_unset=exclude_unset):

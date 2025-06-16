@@ -12,7 +12,14 @@ from src.services.auth import AuthService
         ("person@mail.ru", "Strong_Passw0rd", 409, 200, 200, 200),
     ],
 )
-async def test_auth_controller(email, password, register_status_code, login_status_code, get_info_status_code, logout_status_code):
+async def test_auth_controller(
+    email,
+    password,
+    register_status_code,
+    login_status_code,
+    get_info_status_code,
+    logout_status_code,
+):
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
@@ -24,9 +31,13 @@ async def test_auth_controller(email, password, register_status_code, login_stat
 
         if response.status_code == 200:
             assert payload["email"] == email
-            assert AuthService().verify_password(password, AuthService().hash_password(password))
+            assert AuthService().verify_password(
+                password, AuthService().hash_password(password)
+            )
 
-        response = await ac.post("/auth/login", json={"email": email, "password": password})
+        response = await ac.post(
+            "/auth/login", json={"email": email, "password": password}
+        )
         payload = response.json()
 
         assert response.status_code == login_status_code

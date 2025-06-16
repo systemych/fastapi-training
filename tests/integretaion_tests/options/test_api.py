@@ -3,6 +3,7 @@ async def test_get_options(ac):
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
+
 async def test_create_option(ac):
     option = "Холодильник"
     response = await ac.post("/options", follow_redirects=True, json={"title": option})
