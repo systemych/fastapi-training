@@ -23,10 +23,11 @@ class HotelsRepository(BaseRepository):
         if date_from or date_to:
             query_get_rooms = get_rooms_by_date(date_from=date_from, date_to=date_to)
             rooms = await self.session.execute(query_get_rooms)
+
             query_get_hotels = (
                 select(RoomsOrm.hotel_id)
                 .select_from(RoomsOrm)
-                .filter(RoomsOrm.id.in_(rooms.scalars().all()))
+                .filter(RoomsOrm.id.in_([room.id for room in rooms.scalars().all()]))
             )
             hotels = await self.session.execute(query_get_hotels)
             query = query.filter(self.model.id.in_(hotels.scalars().all()))

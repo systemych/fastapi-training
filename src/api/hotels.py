@@ -21,6 +21,13 @@ async def get_hotels(
     date_from: date = Query(default=None, description="Дата начала для заезда"),
     date_to: date = Query(default=None, description="Дата окончания для заезда"),
 ):
+
+    if date_to <= date_from:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Start date must be less than end date",
+        )
+
     result = await db.hotels.get_all(
         title=title,
         location=location,
@@ -37,7 +44,7 @@ async def get_hotel(db: DBDep, id: int = Path(description="ИД отеля")):
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
     return requested_hotel
 
 
@@ -60,7 +67,7 @@ async def update_hotel(
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
 
     result = await db.hotels.update(hotel_data, id=id)
     await db.commit()
@@ -76,7 +83,7 @@ async def edit_hotel(
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
 
     result = await db.hotels.edit(hotel_data, exсlude_unset=True, id=id)
     await db.commit()
@@ -88,7 +95,7 @@ async def delete_hotels(db: DBDep, id: int):
     requested_hotel = await db.hotels.get_one_or_none(id=id)
 
     if requested_hotel is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
 
     await db.hotels.delete(id=id)
     await db.commit()

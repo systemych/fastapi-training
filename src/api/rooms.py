@@ -28,6 +28,12 @@ async def get_rooms(
     date_from: date = Query(default=None, example="2025-01-07", description="Дата заезда"),
     date_to: date = Query(default=None, example="2025-01-10", description="Дата выезда"),
 ):
+    if date_to <= date_from:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Start date must be less than end date",
+        )
+
     result = await db.rooms.get_all(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
 
     return result
@@ -41,7 +47,7 @@ async def get_room(
     requested_room = await db.rooms.get_one_or_none(id=id)
 
     if requested_room is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     return requested_room
 
 
@@ -50,6 +56,10 @@ async def create_room(
     db: DBDep,
     room_data: RoomAddRequest = Body(openapi_examples=CREATE_ROOM_EXAMPLE),
 ):
+    hotel = await db.hotels.get_one_or_none(id=room_data.hotel_id)
+    if hotel is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+
     _room_data = RoomAddSchema(**room_data.model_dump())
     room_id = await db.rooms.add(_room_data)
     await db.flush()
@@ -76,7 +86,7 @@ async def update_room(
     current_room = await db.rooms.get_one_or_none(id=id)
 
     if current_room is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
 
     await db.rooms_options.update(id, updated_room.options_ids)
     await db.rooms.update(_updated_room, id=id)
@@ -102,7 +112,7 @@ async def edit_room(
 
     current_room = await db.rooms.get_one_or_none(id=id)
     if current_room is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
 
     if edited_room.options_ids:
         await db.rooms_options.update(id, edited_room.options_ids)
@@ -125,7 +135,7 @@ async def delete_room(db: DBDep, id: int):
     requested_room = await db.rooms.get_one_or_none(id=id)
 
     if requested_room is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
 
     await db.rooms_options.delete_bulk_by_option_id(
         ids=[option.id for option in requested_room.options]
