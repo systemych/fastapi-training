@@ -9,7 +9,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 
 from src.main import app
-from src.api.dependencies import get_db_manager
+from src.api.dependencies.db_manager import get_db_manager
 from src.config import settings
 from src.database import Base, engine_null_pool, async_session_maker_null_pool
 from src.utils.db_manager import DBManager

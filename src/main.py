@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import uvicorn
+import logging
 
 import sys
 from pathlib import Path
@@ -16,6 +17,7 @@ from src.api.bookings import router as router_bookings
 from src.api.options import router as router_options
 from src.api.images import router as router_images
 
+logging.basicConfig(level=logging.DEBUG)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):

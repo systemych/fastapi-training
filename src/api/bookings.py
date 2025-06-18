@@ -1,62 +1,42 @@
 from fastapi import APIRouter, HTTPException, status, Path
-from src.api.dependencies import UserIdDep, DBDep
-from src.schemas.bookings import BookingAdd, BookingInsert, BookingUpdate
+from src.api.dependencies.user_id import UserIdDep
+from src.api.dependencies.db_manager import DBDep
+from src.schemas.bookings import BookingAdd, BookingUpdate
+from src.services.bookings import BookingService
+from src.exeptions import DataValidationExeption, NotFoundExeption, UnavailableExeption
 
 router = APIRouter(prefix="/bookings", tags=["Бронирования"])
 
 
 @router.post("/", summary="Забронировать номер в отеле")
 async def create_booking(db: DBDep, user_id: UserIdDep, booking_data: BookingAdd):
-    date_from = booking_data.date_from
-    date_to = booking_data.date_to
-
-    if date_to <= date_from:
+    try:
+        result = await BookingService(db).create_booking(user_id, booking_data)
+    except DataValidationExeption as ex:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Start date must be less than end date",
+            detail=ex.detail,
         )
-
-    room = await db.rooms.get_one_or_none(id=booking_data.room_id)
-    if room is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
-
-    hotel_id = room.hotel_id
-    hotel_rooms_on_date = await db.rooms.get_all(
-        hotel_id=hotel_id,
-        date_from=date_from,
-        date_to=date_to,
-    )
-
-    room_is_available = (
-        len(list(filter(lambda r: r.id == booking_data.room_id, hotel_rooms_on_date)))
-        > 0
-    )
-
-    if not room_is_available:
+    except NotFoundExeption as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
+    except UnavailableExeption as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Room is not available on date period",
+            detail=ex.detail,
         )
 
-    result = await db.bookings.add(
-        BookingInsert(user_id=user_id, price=room.price, **booking_data.model_dump())
-    )
-
-    await db.commit()
     return result
 
 
 @router.get("/", summary="Получить все бронирования")
 async def get_bookings(db: DBDep, user_id: UserIdDep):
-    result = await db.bookings.get_all()
+    result = await BookingService(db).get_bookings()
     return result
 
 
 @router.get("/me", summary="Получить все свои бронирования")
 async def get_my_bookings(db: DBDep, user_id: UserIdDep):
-    result = await db.bookings.get_all(user_id=user_id)
+    result = await BookingService(db).get_my_bookings(user_id)
     return result
 
 
@@ -67,26 +47,19 @@ async def update_booking(
     booking_data: BookingUpdate,
     id: int = Path(description="ИД бронирования"),
 ):
-    date_from = booking_data.date_from
-    date_to = booking_data.date_to
-
-    if date_to <= date_from:
+    try:
+        result = await BookingService(db).update_booking(id, user_id, booking_data)
+    except DataValidationExeption as ex:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Start date must be less than end date",
+            detail=ex.detail,
         )
-
-    room = await db.rooms.get_one_or_none(id=booking_data.room_id)
-    if room is None:
+    except NotFoundExeption as ex:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ex.detail,
         )
 
-    result = await db.bookings.update(
-        BookingInsert(user_id=user_id, price=room.price, **booking_data.model_dump()),
-        id=id,
-    )
-    await db.commit()
     return result
 
 
@@ -96,12 +69,9 @@ async def delete_booking(
     user_id: UserIdDep,
     id: int = Path(description="ИД бронирования"),
 ):
-    booking = await db.rooms.get_one_or_none(id=id)
-    if not booking:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+    try:
+        await BookingService(db).delete_booking(id)
+    except NotFoundExeption as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
 
-    await db.bookings.delete(id=id)
-    await db.commit()
     return "OK"
