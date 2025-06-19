@@ -1,6 +1,6 @@
 venv
 __pycache__
-*.env
 celerybeat-schedule*
 .pytest_cache
+Dockerfile
 docker-commands.txt

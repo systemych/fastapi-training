@@ -17,7 +17,7 @@ from src.api.bookings import router as router_bookings
 from src.api.options import router as router_options
 from src.api.images import router as router_images
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -36,4 +36,4 @@ app.include_router(router_options)
 app.include_router(router_images)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", reload=True)
